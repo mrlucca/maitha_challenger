@@ -14,13 +14,14 @@ class IProductRepository(ABC):
 
     @abstractmethod
     async def update(product: Product) -> Product | None: ...
+
     @abstractmethod
     async def add_inventory_to(
         code: str, supplier: str, expiration_date: datetime
     ) -> Product: ...
 
     @abstractmethod
-    async def get_inventory_from(
+    async def remove_inventory_from(
         code: str, supplier: str, expiration_date: datetime
     ) -> Product: ...
 

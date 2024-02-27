@@ -7,11 +7,12 @@ from src.domain.contracts.repositories.health_check_repository import (
 )
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
-from src.domain.use_cases.product_create import ProductUseCase
+from src.domain.use_cases.product_create import ProductCreateUseCase
 from src.domain.use_cases.product_delete import (
     InputProductDeleteDTO,
     ProductDeleteUseCase,
 )
+from src.domain.use_cases.product_get import ProductGetUseCase
 from src.domain.use_cases.product_update import ProductUpdateUseCase
 
 
@@ -27,7 +28,7 @@ def product_repository_fixture():
 
 @pytest.fixture
 def product_use_case_fixture(product_repository_fixture):
-    return ProductUseCase(product_repository_fixture)
+    return ProductCreateUseCase(product_repository_fixture)
 
 
 @pytest.fixture
@@ -38,6 +39,11 @@ def product_delete_use_case_fixture(product_repository_fixture):
 @pytest.fixture
 def product_update_use_case_fixture(product_repository_fixture):
     return ProductUpdateUseCase(repository=product_repository_fixture)
+
+
+@pytest.fixture
+def product_get_use_case_fixture(product_repository_fixture):
+    return ProductGetUseCase(product_repository_fixture)
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from src.domain.use_cases.health_check import HealthCheckUseCase, OutputHealthCheckDTO
 from src.infra.sqlalchemy.health_check_repository import (
-    HealthCheckRepositoryBySqlAlchemy,
+    SqlAlchemyHealthCheckRepository,
 )
 
 from src.infra.sqlalchemy.instance import SingletonSqlAlchemyConnection
@@ -24,7 +24,7 @@ class SingletonHealthCheckUseCaseFactory:
 
     def __init__(self):
         self.db_instance = SingletonSqlAlchemyConnection.get_instance()
-        self.repository_instance = HealthCheckRepositoryBySqlAlchemy(self.db_instance)
+        self.repository_instance = SqlAlchemyHealthCheckRepository(self.db_instance)
         self.use_case_instance = HealthCheckUseCase(self.repository_instance)
 
 
