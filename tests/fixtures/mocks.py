@@ -8,6 +8,10 @@ from src.domain.contracts.repositories.health_check_repository import (
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
 from src.domain.use_cases.product_create import ProductUseCase
+from src.domain.use_cases.product_delete import (
+    InputProductDeleteDTO,
+    ProductDeleteUseCase,
+)
 
 
 @pytest.fixture
@@ -35,4 +39,19 @@ def product_fake_fixture():
         expiration_date="2024-12-31",
         created_at=datetime.datetime.now(datetime.UTC),
         updated_at=datetime.datetime.now(datetime.UTC),
+    )
+
+
+@pytest.fixture
+def product_delete_use_case_fixture():
+    repository_mock = AsyncMock(spec=IProductRepository)
+    return ProductDeleteUseCase(repository=repository_mock)
+
+
+@pytest.fixture
+def input_product_delete_dto_fixture():
+    return InputProductDeleteDTO(
+        code="ABC123",
+        supplier="Supplier",
+        expiration_date=datetime.datetime.now(datetime.UTC),
     )
