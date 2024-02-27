@@ -1,8 +1,9 @@
-
 from unittest.mock import AsyncMock
 import pytest
 
-from src.domain.contracts.repositories.health_check_repository import IHealthCheckRepository
+from src.domain.contracts.repositories.health_check_repository import (
+    IHealthCheckRepository,
+)
 
 
 @pytest.fixture
