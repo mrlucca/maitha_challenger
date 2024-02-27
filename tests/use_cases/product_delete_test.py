@@ -8,7 +8,7 @@ from src.domain.contracts.repositories.product_repository import IProductReposit
 async def test_execute_product_found(
     product_delete_use_case_fixture, input_product_delete_dto_fixture
 ):
-    
+
     now = datetime.now()
     expected_product = Product(
         title="Product",
