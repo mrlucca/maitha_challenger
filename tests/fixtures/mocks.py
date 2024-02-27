@@ -12,6 +12,7 @@ from src.domain.use_cases.product_delete import (
     InputProductDeleteDTO,
     ProductDeleteUseCase,
 )
+from src.domain.use_cases.product_update import ProductUpdateUseCase
 
 
 @pytest.fixture
@@ -20,9 +21,32 @@ def health_check_repository_fixture():
 
 
 @pytest.fixture
-def product_use_case_fixture():
-    repository_mock = AsyncMock(spec=IProductRepository)
-    return ProductUseCase(repository_mock)
+def product_repository_fixture():
+    return AsyncMock(spec=IProductRepository)
+
+
+@pytest.fixture
+def product_use_case_fixture(product_repository_fixture):
+    return ProductUseCase(product_repository_fixture)
+
+
+@pytest.fixture
+def product_delete_use_case_fixture(product_repository_fixture):
+    return ProductDeleteUseCase(repository=product_repository_fixture)
+
+
+@pytest.fixture
+def product_update_use_case_fixture(product_repository_fixture):
+    return ProductUpdateUseCase(repository=product_repository_fixture)
+
+
+@pytest.fixture
+def input_product_delete_dto_fixture():
+    return InputProductDeleteDTO(
+        code="ABC123",
+        supplier="Supplier",
+        expiration_date=datetime.datetime.now(datetime.UTC),
+    )
 
 
 @pytest.fixture
@@ -39,19 +63,4 @@ def product_fake_fixture():
         expiration_date="2024-12-31",
         created_at=datetime.datetime.now(datetime.UTC),
         updated_at=datetime.datetime.now(datetime.UTC),
-    )
-
-
-@pytest.fixture
-def product_delete_use_case_fixture():
-    repository_mock = AsyncMock(spec=IProductRepository)
-    return ProductDeleteUseCase(repository=repository_mock)
-
-
-@pytest.fixture
-def input_product_delete_dto_fixture():
-    return InputProductDeleteDTO(
-        code="ABC123",
-        supplier="Supplier",
-        expiration_date=datetime.datetime.now(datetime.UTC),
     )
