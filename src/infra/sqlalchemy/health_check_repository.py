@@ -6,7 +6,7 @@ from sqlalchemy import exc, text
 from src.infra.sqlalchemy.instance import SingletonSqlAlchemyConnection
 
 
-class HealthCheckRepositoryByPostgresWithSqlAlchemy(IHealthCheckRepository):
+class HealthCheckRepositoryBySqlAlchemy(IHealthCheckRepository):
     def __init__(self, sqlalchemy_instance: SingletonSqlAlchemyConnection):
         self.sqlalchemy_instance = sqlalchemy_instance
 
