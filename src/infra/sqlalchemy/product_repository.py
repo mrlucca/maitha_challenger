@@ -75,10 +75,10 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def remove_inventory_from(
         self, code: str, supplier: str, expiration_date: datetime
     ) -> Product | None:
+        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            product_model = await self._get_product_by_code_supplier_expiration(
-                code, supplier, expiration_date.replace(tzinfo=timezone.utc)
-            )
+            statement = select(ProductModel).where(ProductModel.id == id)
+            product_model = await session.execute(statement)
             if product_model and product_model.inventory_quantity > 0:
                 product_model.inventory_quantity -= 1
                 await session.commit()

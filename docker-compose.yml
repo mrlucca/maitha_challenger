@@ -12,10 +12,14 @@ services:
       - POSTGRES_USER=local_test
       - POSTGRES_PASSWORD=local_test
       - POSTGRES_DB=local_test
+      - BROKER_URL=broker
+      - BROKER_USER=guest
+      - BROKER_PASSWORD=guest
     volumes:
       - .:/app
     depends_on:
       - db
+      - broker
 
   app_prod:
     build:
@@ -27,6 +31,7 @@ services:
       - .env
     depends_on:
       - db
+      - broker
 
   db:
     image: postgres:latest
@@ -34,3 +39,11 @@ services:
       - POSTGRES_USER=local_test
       - POSTGRES_PASSWORD=local_test
       - POSTGRES_DB=local_test
+
+  broker:
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
