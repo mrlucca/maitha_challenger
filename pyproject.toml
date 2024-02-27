@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "maitha-challenger"
+version = "0.1.0"
+description = ""
+authors = ["lucca vinicios <vini.lucca42@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-decouple = "^3.8"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+orjson = "^3.9.15"
+sqlalchemy = "^2.0.27"
+asyncpg = "^0.29.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.0.0"
+pytest-mock = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
