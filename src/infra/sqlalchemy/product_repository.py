@@ -6,7 +6,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
-from src.infra.sqlalchemy.models import ProductModel, make_product_id_from
+from src.infra.sqlalchemy.models import (
+    ProductModel,
+    make_product_id_from,
+    make_product_id_from_base,
+)
 
 
 class SQLAlchemyProductRepository(IProductRepository):
@@ -31,7 +35,6 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def exists(self, product: Product) -> bool:
         id = make_product_id_from(product)
         async with self.sqlalchemy_instance.async_session() as session:
-
             statement = select(ProductModel).where(ProductModel.id == id)
             result = await session.execute(statement)
             if not result:
@@ -59,10 +62,10 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def add_inventory_to(
         self, code: str, supplier: str, expiration_date: datetime
     ) -> Product | None:
+        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            product_model = await self._get_product_by_code_supplier_expiration(
-                code, supplier, expiration_date.replace(tzinfo=timezone.utc)
-            )
+            statement = select(ProductModel).where(ProductModel.id == id)
+            product_model = await session.execute(statement)
             if product_model:
                 product_model.inventory_quantity += 1
                 await session.commit()

@@ -21,9 +21,16 @@ from src.domain.entities.purchase import CustomerType, PaymentMethod, Purchase
 Base = declarative_base()
 
 
+def make_product_id_from_base(code, supplier, date):
+    yyyymmdd = date.strftime("%Y%m%d")
+    return f"{code}{supplier}{yyyymmdd}"
+
+
 def make_product_id_from(product):
-    yyyymmdd = product.expiration_date.strftime("%Y%m%d")
-    return f"{product.code}{product.supplier}{yyyymmdd}"
+    return make_product_id_from_base(
+        product.code, product.supplier, product.expiration_date
+    )
+
 
 class ProductModel(Base):
     __tablename__ = "product"
