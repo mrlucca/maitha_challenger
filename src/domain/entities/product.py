@@ -14,5 +14,4 @@ class Product(pydantic.BaseModel):
     sell_price: float
     weight_in_kilograms: float
     expiration_date: datetime
-    created_at: datetime
-    updated_at: datetime
+  

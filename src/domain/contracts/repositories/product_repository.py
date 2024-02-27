@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import datetime
-from typing import List
+from typing import List, Optional
 
 from src.domain.entities.product import Product
 
@@ -26,3 +26,8 @@ class IProductRepository(ABC):
 
     @abstractmethod
     async def expiration_date(date: datetime): ...
+
+    @abstractmethod
+    async def get_by_code_supplier_expiration(
+        self, code: str, supplier: str, expiration_date: datetime
+    ) -> Optional[Product]: ...
