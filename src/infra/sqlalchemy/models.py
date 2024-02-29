@@ -1,20 +1,17 @@
+import datetime
 from typing import Self
 from sqlalchemy import (
-    TIMESTAMP,
     Column,
     ForeignKey,
     Integer,
     String,
-    DateTime,
     Enum,
     Numeric,
     Float,
     DateTime,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
 from src.domain.entities.product import Product
 from src.domain.entities.purchase import CustomerType, PaymentMethod, Purchase
 
@@ -32,6 +29,10 @@ def make_product_id_from(product):
     )
 
 
+def utc_now() -> datetime:
+    return datetime.datetime.now(datetime.UTC)
+
+
 class ProductModel(Base):
     __tablename__ = "product"
 
@@ -44,11 +45,9 @@ class ProductModel(Base):
     buy_price = Column(Float, nullable=False)
     sell_price = Column(Float, nullable=False)
     weight_in_kilograms = Column(Float, nullable=False)
-    expiration_date = Column(TIMESTAMP, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), onupdate=datetime.utcnow)
-
-    # purchases = relationship("PurchaseModel", back_populates="product")
+    expiration_date = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    updated_at = Column(DateTime(timezone=True), onupdate=utc_now)
 
     def __repr__(self):
         return f"<Product(id={self.id}, title={self.title}, code={self.code}, inventory_quantity={self.inventory_quantity})>"
@@ -86,15 +85,13 @@ class ProductModel(Base):
         )
 
 
-"""
-
 class PurchaseModel(Base):
     __tablename__ = "purchase"
 
     id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey('product.id'), nullable=False)
+    product_id = Column(String(255), ForeignKey("product.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
-    purchase_date = Column(DateTime(timezone=True), default=datetime.utcnow)
+    purchase_date = Column(DateTime(timezone=True), default=utc_now)
     identification = Column(String(18), nullable=False)
     identification_type = Column(Enum(CustomerType), nullable=False)
     payment_method = Column(Enum(PaymentMethod), nullable=False)
@@ -128,4 +125,3 @@ class PurchaseModel(Base):
             payment_method=self.payment_method,
             total_amount=self.total_amount,
         )
-"""

@@ -1,12 +1,11 @@
 from typing import Self
 from fastapi import APIRouter, Depends
-from fastapi.responses import ORJSONResponse
 from src.domain.use_cases.health_check import HealthCheckUseCase, OutputHealthCheckDTO
-from src.infra.sqlalchemy.health_check_repository import (
+from src.infra.sqlalchemy.repositories.health_check_repository import (
     SqlAlchemyHealthCheckRepository,
 )
 
-from src.infra.sqlalchemy.instance import SingletonSqlAlchemyConnection
+from src.infra.sqlalchemy.connection import SingletonSqlAlchemyConnection
 
 
 router = APIRouter(prefix="/api/health")

@@ -1,14 +1,11 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
 from src.infra.sqlalchemy.models import (
     ProductModel,
-    make_product_id_from,
     make_product_id_from_base,
 )
 
@@ -33,21 +30,20 @@ class SQLAlchemyProductRepository(IProductRepository):
             return product_model.to_entity()
 
     async def exists(self, product: Product) -> bool:
-        id = make_product_id_from(product)
-        async with self.sqlalchemy_instance.async_session() as session:
-            statement = select(ProductModel).where(ProductModel.id == id)
-            result = await session.execute(statement)
-            if not result:
-                return False
+        product_model = await self._get_product_by_code_supplier_expiration(
+            product.code, product.supplier, product.expiration_date
+        )
+        if not product_model:
+            return False
 
-            return bool(result)
+        return bool(product_model)
 
     async def update(self, product: Product) -> Product | None:
         async with self.sqlalchemy_instance.async_session() as session:
             product_model = await self._get_product_by_code_supplier_expiration(
                 product.code,
                 product.supplier,
-                product.expiration_date.replace(tzinfo=timezone.utc),
+                product.expiration_date,
             )
             if product_model:
                 product_model.title = product.title
@@ -62,10 +58,10 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def add_inventory_to(
         self, code: str, supplier: str, expiration_date: datetime
     ) -> Product | None:
-        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            statement = select(ProductModel).where(ProductModel.id == id)
-            product_model = await session.execute(statement)
+            product_model = await self._get_product_by_code_supplier_expiration(
+                code, supplier, expiration_date
+            )
             if product_model:
                 product_model.inventory_quantity += 1
                 await session.commit()
@@ -75,10 +71,10 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def remove_inventory_from(
         self, code: str, supplier: str, expiration_date: datetime
     ) -> Product | None:
-        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            statement = select(ProductModel).where(ProductModel.id == id)
-            product_model = await session.execute(statement)
+            product_model = await self._get_product_by_code_supplier_expiration(
+                code, supplier, expiration_date
+            )
             if product_model and product_model.inventory_quantity > 0:
                 product_model.inventory_quantity -= 1
                 await session.commit()
@@ -87,23 +83,17 @@ class SQLAlchemyProductRepository(IProductRepository):
 
     async def get_by_code_supplier_expiration(
         self, code: str, supplier: str, expiration_date: datetime
-    ) -> Optional[Product]:
+    ) -> Product | None:
         product_model = await self._get_product_by_code_supplier_expiration(
-            code, supplier, expiration_date.replace(tzinfo=timezone.utc)
+            code, supplier, expiration_date
         )
-        if product_model:
-            return product_model.to_entity()
-        return None
+        return None if not product_model else product_model.to_entity()
 
     async def _get_product_by_code_supplier_expiration(
         self, code: str, supplier: str, expiration_date: datetime
-    ) -> Optional[ProductModel]:
+    ) -> ProductModel | None:
+        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            query = await session.execute(
-                select(ProductModel)
-                .filter_by(
-                    code=code, supplier=supplier, expiration_date=expiration_date
-                )
-                .first()
-            )
-            return query.scalar()
+            statement = select(ProductModel).where(ProductModel.id == id)
+            product_model = await session.execute(statement)
+            return product_model

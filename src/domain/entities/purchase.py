@@ -17,7 +17,7 @@ class PaymentMethod(Enum):
 @dataclass(slots=True)
 class Purchase:
     id: int
-    product_id: int
+    product_id: str
     quantity: int
     purchase_date: datetime
     identification: str

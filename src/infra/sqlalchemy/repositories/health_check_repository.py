@@ -3,7 +3,7 @@ from src.domain.contracts.repositories.health_check_repository import (
 )
 from sqlalchemy import exc, text
 
-from src.infra.sqlalchemy.instance import SingletonSqlAlchemyConnection
+from src.infra.sqlalchemy.connection import SingletonSqlAlchemyConnection
 
 
 class SqlAlchemyHealthCheckRepository(IHealthCheckRepository):

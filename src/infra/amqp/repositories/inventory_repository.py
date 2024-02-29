@@ -13,5 +13,5 @@ class AmqpInventoryRepository(IInventoryRepository):
             channel = await self.connection.channel()
             await channel.default_exchange.publish(
                 aio_pika.Message(body=dto.model_dump_json().encode()),
-                routing_key=self.topic
+                routing_key=self.topic,
             )

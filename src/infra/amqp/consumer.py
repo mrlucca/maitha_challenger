@@ -1,5 +1,4 @@
 import asyncio
-from aio_pika import Channel
 import aio_pika
 import orjson
 
@@ -22,7 +21,6 @@ class AmqpConsumer:
             async def process(message: aio_pika.IncomingMessage):
                 async with message.process():
                     decoded_message = message.body.decode()
-                    print("Received message:", decoded_message)
                     await processor(parser(orjson.loads(decoded_message)))
 
             return process

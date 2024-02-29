@@ -7,22 +7,22 @@ from src.domain.entities.product import Product
 
 class IProductRepository(ABC):
     @abstractmethod
-    async def create(product: Product) -> Product | None: ...
+    async def create(self, product: Product) -> Product | None: ...
 
     @abstractmethod
-    async def exists(product: Product) -> bool: ...
+    async def exists(self, product: Product) -> bool: ...
 
     @abstractmethod
-    async def update(product: Product) -> Product | None: ...
+    async def update(self, product: Product) -> Product | None: ...
 
     @abstractmethod
     async def add_inventory_to(
-        code: str, supplier: str, expiration_date: datetime
+        self, code: str, supplier: str, expiration_date: datetime
     ) -> Product: ...
 
     @abstractmethod
     async def remove_inventory_from(
-        code: str, supplier: str, expiration_date: datetime
+        self, code: str, supplier: str, expiration_date: datetime
     ) -> Product: ...
 
     @abstractmethod

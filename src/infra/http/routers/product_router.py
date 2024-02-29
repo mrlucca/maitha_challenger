@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from src.domain.use_cases.product_create import (
     InputProductCreateDTO,
-    OutputProductCreateDTO,
     ProductCreateUseCase,
+    OutputProductCreateDTO,
 )
 from src.domain.use_cases.product_delete import (
     InputProductDeleteDTO,
@@ -22,8 +22,10 @@ from src.domain.use_cases.product_update import (
     OutputProductUpdateDTO,
     ProductUpdateUseCase,
 )
-from src.infra.sqlalchemy.instance import SingletonSqlAlchemyConnection
-from src.infra.sqlalchemy.product_repository import SQLAlchemyProductRepository
+from src.infra.sqlalchemy.connection import SingletonSqlAlchemyConnection
+from src.infra.sqlalchemy.repositories.product_repository import (
+    SQLAlchemyProductRepository,
+)
 
 
 router = APIRouter(prefix="/api/product")
@@ -74,24 +76,24 @@ def return_200_if_success(res):
     return 200 if res.success else 400
 
 
-@router.post("/")
+@router.post("/", response_model=OutputProductCreateDTO)
 async def create_product(
     input_dto: InputProductCreateDTO,
     use_case: ProductCreateUseCase = Depends(factory_singleton_product_create_use_case),
-) -> OutputProductCreateDTO:
+) -> ORJSONResponse:
     res = await use_case.execute(input_dto)
     return ORJSONResponse(
         content=res.model_dump_json(), status_code=return_200_if_success(res)
     )
 
 
-@router.get("/")
+@router.get("/", response_model=OutputProductGetDTO)
 async def get_product(
     code: str,
     supplier: str,
     expiration_date: datetime,
     use_case: ProductGetUseCase = Depends(factory_singleton_product_get_use_case),
-) -> OutputProductGetDTO:
+) -> ORJSONResponse:
     input_dto = InputProductGetDTO(
         code=code, supplier=supplier, expiration_date=expiration_date
     )
@@ -99,19 +101,19 @@ async def get_product(
     return ORJSONResponse(content=res.json(), status_code=return_200_if_success(res))
 
 
-@router.put("/")
+@router.put("/", response_model=OutputProductUpdateDTO)
 async def update_product(
     input_dto: InputProductUpdateDTO,
     use_case: ProductUpdateUseCase = Depends(factory_singleton_product_update_use_case),
-) -> OutputProductUpdateDTO:
+) -> ORJSONResponse:
     res = await use_case.execute(input_dto)
     return ORJSONResponse(content=res.json(), status_code=return_200_if_success(res))
 
 
-@router.delete("/")
+@router.delete("/", response_model=OutputProductDeleteDTO)
 async def delete_product(
     input_dto: InputProductDeleteDTO,
     use_case: ProductDeleteUseCase = Depends(factory_singleton_product_delete_use_case),
-) -> OutputProductDeleteDTO:
+) -> ORJSONResponse:
     res = await use_case.execute(input_dto)
     return ORJSONResponse(content=res.json(), status_code=return_200_if_success(res))

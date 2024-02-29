@@ -1,9 +1,8 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 
 from src.domain.use_cases.product_inventory_processor import InputInventoryProcessorDTO
 
 
 class IInventoryRepository(ABC):
-    @abstractclassmethod
-    async def send(dto: InputInventoryProcessorDTO):
-        ...
+    @abstractmethod
+    async def send(self, dto: InputInventoryProcessorDTO): ...
