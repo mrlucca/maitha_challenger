@@ -49,6 +49,4 @@ class ProductSendInventoryUseCase:
             action=input_dto.action,
         )
         await self.repository.send(input_inventory_processor_dto)
-        return OutputProductSendInventoryDTO(
-                success=True, message="sent event"
-            )
+        return OutputProductSendInventoryDTO(success=True, message="sent event")

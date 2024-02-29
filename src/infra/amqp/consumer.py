@@ -37,8 +37,5 @@ class AmqpConsumer:
 
             for subscriber in data["subscribers"]:
                 asyncio.ensure_future(
-                    queue.consume(
-                        wrapper_consumer(subscriber, parser)
-                    )
+                    queue.consume(wrapper_consumer(subscriber, parser))
                 )
-
