@@ -1,5 +1,6 @@
 import asyncio
 import aio_pika
+import aiormq
 import orjson
 
 
@@ -17,23 +18,27 @@ class AmqpConsumer:
         self.subscribers[topic]["subscribers"].append(subscriber)
 
     async def run(self):
-        def wrapper_message_processor(processor, parser):
-            async def process(message: aio_pika.IncomingMessage):
+        def wrapper_consumer(processor, parser):
+
+            async def consumer(message: aio_pika.IncomingMessage):
                 async with message.process():
                     decoded_message = message.body.decode()
-                    await processor(parser(orjson.loads(decoded_message)))
+                    await processor.execute(parser(**orjson.loads(decoded_message)))
 
-            return process
+            return consumer
 
         if not self.subscribers:
             return
 
-        async with self.connection:
+        for topic, data in self.subscribers.items():
             channel = await self.connection.channel()
-            for topic, data in self.subscribers.items():
-                queue = await channel.declare_queue(topic)
-                parser = data["parser"]
-                for subscriber in data["subscribers"]:
-                    asyncio.ensure_future(
-                        queue.consume(wrapper_message_processor(subscriber, parser))
+            queue = await channel.declare_queue(topic)
+            parser = data["parser"]
+
+            for subscriber in data["subscribers"]:
+                asyncio.ensure_future(
+                    queue.consume(
+                        wrapper_consumer(subscriber, parser)
                     )
+                )
+

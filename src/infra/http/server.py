@@ -1,4 +1,6 @@
 import asyncio
+from typing import List
+
 from fastapi import FastAPI
 from src.domain.use_cases.product_inventory_processor import (
     InputInventoryProcessorDTO,
@@ -22,6 +24,8 @@ def setup_and_get_app():
     app.include_router(health_check_router)
     app.include_router(product_routers)
 
+    features_to_stop_in_graceful_shutdown: List[asyncio.Future] = []
+
     @app.on_event("startup")
     async def setup_models():
         instance = SingletonSqlAlchemyConnection.get_instance()
@@ -30,14 +34,20 @@ def setup_and_get_app():
 
         connection_instance = SingletonSqlAlchemyConnection.get_instance()
         product_repository = SQLAlchemyProductRepository(connection_instance)
-        consumer = AmqpConsumer(
-            (await SingletonAMQPConnection.get_instance()).connection
-        )
+        broker_connection = await SingletonAMQPConnection.get_instance()
+        consumer = AmqpConsumer(broker_connection)
         consumer.subscribe_from_topic(
             "inventory",
             InventoryProcessorUseCase(product_repository),
             InputInventoryProcessorDTO,
         )
-        asyncio.ensure_future(consumer.run())
+        consumer = asyncio.ensure_future(consumer.run())
+        features_to_stop_in_graceful_shutdown.append(consumer)
+
+        @app.on_event("shutdown")
+        async def graceful_shutdown():
+            broker_connection = await SingletonAMQPConnection.get_instance()
+            await broker_connection.close()
+            map(lambda feature: feature.cancel(), features_to_stop_in_graceful_shutdown, )
 
     return app

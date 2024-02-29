@@ -9,7 +9,9 @@ async def test_execute_product_found(
     product_delete_use_case_fixture, input_product_delete_dto_fixture
 ):
 
-    expected_product_product_id = make_product_id_from_base("test", "test", datetime.now())
+    expected_product_product_id = make_product_id_from_base(
+        "test", "test", datetime.now()
+    )
     product_delete_use_case_fixture.repository.exists_from.return_value = True
     product_delete_use_case_fixture.repository.remove.return_value = (
         expected_product_product_id
@@ -26,7 +28,9 @@ async def test_execute_product_found(
 async def test_execute_product_not_found(
     product_delete_use_case_fixture, input_product_delete_dto_fixture
 ):
-    expected_product_product_id = make_product_id_from_base("test", "test", datetime.now())
+    expected_product_product_id = make_product_id_from_base(
+        "test", "test", datetime.now()
+    )
     product_delete_use_case_fixture.repository.exists_from.return_value = False
     product_delete_use_case_fixture.repository.remove.return_value = (
         expected_product_product_id
@@ -45,7 +49,9 @@ async def test_execute_product_not_found(
 ):
     expected_product_product_id = None
     product_delete_use_case_fixture.repository.exists_from.return_value = True
-    product_delete_use_case_fixture.repository.remove.return_value = expected_product_product_id
+    product_delete_use_case_fixture.repository.remove.return_value = (
+        expected_product_product_id
+    )
     result = await product_delete_use_case_fixture.execute(
         input_product_delete_dto_fixture
     )

@@ -9,9 +9,8 @@ class AmqpInventoryRepository(IInventoryRepository):
         self.topic = topic
 
     async def send(self, dto: InputInventoryProcessorDTO):
-        async with self.connection:
-            channel = await self.connection.channel()
-            await channel.default_exchange.publish(
-                aio_pika.Message(body=dto.model_dump_json().encode()),
-                routing_key=self.topic,
-            )
+        channel = await self.connection.channel()
+        await channel.default_exchange.publish(
+            aio_pika.Message(body=dto.model_dump_json().encode()),
+            routing_key=self.topic,
+        )

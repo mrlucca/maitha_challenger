@@ -17,11 +17,18 @@ from src.domain.use_cases.product_get import (
     OutputProductGetDTO,
     ProductGetUseCase,
 )
+from src.domain.use_cases.product_send_inventory import (
+    ProductSendInventoryUseCase,
+    OutputProductSendInventoryDTO,
+    InputProductSendInventoryDTO,
+)
 from src.domain.use_cases.product_update import (
     InputProductUpdateDTO,
     OutputProductUpdateDTO,
     ProductUpdateUseCase,
 )
+from src.infra.amqp.connection import SingletonAMQPConnection
+from src.infra.amqp.repositories.inventory_repository import AmqpInventoryRepository
 from src.infra.sqlalchemy.connection import SingletonSqlAlchemyConnection
 from src.infra.sqlalchemy.repositories.product_repository import (
     SQLAlchemyProductRepository,
@@ -40,6 +47,27 @@ class BaseSingletonUseCase:
             connection_instance = SingletonSqlAlchemyConnection.get_instance()
             repo = SQLAlchemyProductRepository(connection_instance)
             cls._instance = cls(repo)
+
+        return cls._instance
+
+
+class InventorySingletonUseCase:
+    _instance = None
+    TOPIC_NAME = "inventory"
+
+    def __init__(self, repo, broker_repo):
+        self.repo = repo
+        self.broker_repo = broker_repo
+        self.use_case = ProductSendInventoryUseCase(self.broker_repo, self.repo)
+
+    @classmethod
+    async def factory_instance(cls) -> Self:
+        if cls._instance is None:
+            connection_instance = SingletonSqlAlchemyConnection.get_instance()
+            repo = SQLAlchemyProductRepository(connection_instance)
+            con = await SingletonAMQPConnection.get_instance()
+            broker_repository = AmqpInventoryRepository(con, cls.TOPIC_NAME)
+            cls._instance = cls(repo, broker_repository)
 
         return cls._instance
 
@@ -70,6 +98,11 @@ def factory_singleton_product_update_use_case() -> ProductUpdateUseCase:
 
 def factory_singleton_product_delete_use_case() -> ProductDeleteUseCase:
     return AdaptDeleteUseCase.factory_instance()
+
+
+async def factory_singleton_inventory_use_case() -> ProductSendInventoryUseCase:
+    singleton_instance = await InventorySingletonUseCase.factory_instance()
+    return singleton_instance.use_case
 
 
 def return_200_if_success(res):
@@ -114,6 +147,17 @@ async def update_product(
 async def delete_product(
     input_dto: InputProductDeleteDTO,
     use_case: ProductDeleteUseCase = Depends(factory_singleton_product_delete_use_case),
+) -> ORJSONResponse:
+    res = await use_case.execute(input_dto)
+    return ORJSONResponse(content=res.json(), status_code=return_200_if_success(res))
+
+
+@router.post("/send/inventory", response_model=OutputProductSendInventoryDTO)
+async def delete_product(
+    input_dto: InputProductSendInventoryDTO,
+    use_case: ProductSendInventoryUseCase = Depends(
+        factory_singleton_inventory_use_case
+    ),
 ) -> ORJSONResponse:
     res = await use_case.execute(input_dto)
     return ORJSONResponse(content=res.json(), status_code=return_200_if_success(res))
