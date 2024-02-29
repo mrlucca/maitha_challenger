@@ -2,6 +2,8 @@ import asyncio
 from typing import List
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.domain.use_cases.product_inventory_processor import (
     InputInventoryProcessorDTO,
     InventoryProcessorUseCase,
@@ -17,12 +19,27 @@ from src.infra.sqlalchemy.repositories.product_repository import (
     SQLAlchemyProductRepository,
 )
 
+ALLOWED_HOSTS = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://example.com",
+    "https://example.com"
+]
+
 
 def setup_and_get_app():
     app = FastAPI()
 
     app.include_router(health_check_router)
     app.include_router(product_routers)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=ALLOWED_HOSTS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
     features_to_stop_in_graceful_shutdown: List[asyncio.Future] = []
 
