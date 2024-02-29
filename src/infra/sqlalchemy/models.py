@@ -36,7 +36,7 @@ def utc_now() -> datetime:
 class ProductModel(Base):
     __tablename__ = "product"
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(255), primary_key=True, index=True)
     title = Column(String(100), nullable=False)
     description = Column(String(255), nullable=False)
     code = Column(String(50), nullable=False, unique=True)
