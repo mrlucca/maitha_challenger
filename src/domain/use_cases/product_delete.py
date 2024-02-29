@@ -1,7 +1,7 @@
 import pydantic
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
@@ -15,8 +15,16 @@ class InputProductDeleteDTO(pydantic.BaseModel):
 
 class OutputProductDeleteDTO(pydantic.BaseModel):
     success: bool
-    product: Union[Product, None]
-    msg: Union[str, None]
+    product_id: Optional[str] = None
+    msg: Optional[str] = None
+
+    @classmethod
+    def do_success(cls, product_id: str):
+        return cls(success=True, product_id=product_id)
+
+    @classmethod
+    def do_error(cls, msg: str):
+        return cls(success=False, msg=msg)
 
 
 @dataclass
@@ -24,14 +32,23 @@ class ProductDeleteUseCase:
     repository: IProductRepository
 
     async def execute(self, input_dto: InputProductDeleteDTO) -> OutputProductDeleteDTO:
-        product = await self.repository.get_by_code_supplier_expiration(
+        product_exists = await self.repository.exists_from(
             code=input_dto.code,
             supplier=input_dto.supplier,
             expiration_date=input_dto.expiration_date,
         )
-        if product:
-            return OutputProductDeleteDTO(success=True, product=product, msg=None)
+        if not product_exists:
+            return OutputProductDeleteDTO.do_error("Product not exists")
 
-        return OutputProductDeleteDTO(
-            success=False, msg="Product not found", product=None
+        product_id = await self.repository.remove(
+            code=input_dto.code,
+            supplier=input_dto.supplier,
+            expiration_date=input_dto.expiration_date,
         )
+
+        if not product_id:
+            return OutputProductDeleteDTO.do_error(
+                "product not deleted",
+            )
+
+        return OutputProductDeleteDTO.do_success(product_id)

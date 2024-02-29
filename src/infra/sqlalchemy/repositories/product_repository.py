@@ -1,6 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import select, delete
 
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
@@ -17,21 +16,21 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def create(self, product: Product) -> Product | None:
         async with self.sqlalchemy_instance.async_session() as session:
             product_model = ProductModel.from_entity(product)
-            try:
-                async with session.begin():
-                    session.add(product_model)
-                    await session.flush()
-                    await session.refresh(product_model)
-            except SQLAlchemyError as e:
-                await session.rollback()
-            finally:
-                await session.close()
+            session.add(product_model)
             await session.commit()
+            await session.refresh(product_model)
             return product_model.to_entity()
 
     async def exists(self, product: Product) -> bool:
-        product_model = await self._get_product_by_code_supplier_expiration(
+        return await self.exists_from(
             product.code, product.supplier, product.expiration_date
+        )
+
+    async def exists_from(
+        self, code: str, supplier: str, expiration_date: datetime
+    ) -> bool:
+        product_model = await self._get_product_by_code_supplier_expiration(
+            code, supplier, expiration_date
         )
         if not product_model:
             return False
@@ -45,15 +44,28 @@ class SQLAlchemyProductRepository(IProductRepository):
                 product.supplier,
                 product.expiration_date,
             )
-            if product_model:
-                product_model.title = product.title
-                product_model.description = product.description
-                product_model.buy_price = product.buy_price
-                product_model.sell_price = product.sell_price
-                product_model.weight_in_kilograms = product.weight_in_kilograms
-                await session.commit()
-                return product_model.to_entity()
-            return None
+            if not product_model:
+                return None
+
+            product_model.title = product.title
+            product_model.description = product.description
+            product_model.buy_price = product.buy_price
+            product_model.sell_price = product.sell_price
+            product_model.weight_in_kilograms = product.weight_in_kilograms
+            session.add(product_model)
+            await session.commit()
+            await session.refresh(product_model)
+            return product_model.to_entity()
+
+    async def remove(
+        self, code: str, supplier: str, expiration_date: datetime
+    ) -> str | None:
+        async with self.sqlalchemy_instance.async_session() as session:
+            product_id = make_product_id_from_base(code, supplier, expiration_date)
+            statement = delete(ProductModel).where(ProductModel.id == product_id)
+            await session.execute(statement)
+            await session.commit()
+            return product_id
 
     async def add_inventory_to(
         self, code: str, supplier: str, expiration_date: datetime
@@ -62,11 +74,13 @@ class SQLAlchemyProductRepository(IProductRepository):
             product_model = await self._get_product_by_code_supplier_expiration(
                 code, supplier, expiration_date
             )
-            if product_model:
-                product_model.inventory_quantity += 1
-                await session.commit()
-                return product_model.to_entity()
-            return None
+            if not product_model:
+                return None
+
+            product_model.inventory_quantity += 1
+            session.add(product_model)
+            await session.commit()
+            await session.refresh(product_model)
 
     async def remove_inventory_from(
         self, code: str, supplier: str, expiration_date: datetime
@@ -75,11 +89,14 @@ class SQLAlchemyProductRepository(IProductRepository):
             product_model = await self._get_product_by_code_supplier_expiration(
                 code, supplier, expiration_date
             )
-            if product_model and product_model.inventory_quantity > 0:
-                product_model.inventory_quantity -= 1
-                await session.commit()
-                return product_model.to_entity()
-            return None
+            if not product_model and not (product_model.inventory_quantity > 0):
+                return None
+
+            product_model.inventory_quantity -= 1
+            session.add(product_model)
+            await session.commit()
+            await session.refresh(product_model)
+            return product_model.to_entity()
 
     async def get_by_code_supplier_expiration(
         self, code: str, supplier: str, expiration_date: datetime
@@ -92,8 +109,8 @@ class SQLAlchemyProductRepository(IProductRepository):
     async def _get_product_by_code_supplier_expiration(
         self, code: str, supplier: str, expiration_date: datetime
     ) -> ProductModel | None:
-        id = make_product_id_from_base(code, supplier, expiration_date)
         async with self.sqlalchemy_instance.async_session() as session:
-            statement = select(ProductModel).where(ProductModel.id == id)
+            product_id = make_product_id_from_base(code, supplier, expiration_date)
+            statement = select(ProductModel).where(ProductModel.id == product_id)
             product_model = await session.execute(statement)
-            return product_model
+            return product_model.scalar_one_or_none()

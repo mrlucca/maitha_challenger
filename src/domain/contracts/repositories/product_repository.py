@@ -10,10 +10,20 @@ class IProductRepository(ABC):
     async def create(self, product: Product) -> Product | None: ...
 
     @abstractmethod
+    async def exists_from(
+        self, code: str, supplier: str, expiration_date: datetime
+    ) -> bool: ...
+
+    @abstractmethod
     async def exists(self, product: Product) -> bool: ...
 
     @abstractmethod
     async def update(self, product: Product) -> Product | None: ...
+
+    @abstractmethod
+    async def remove(
+        self, code: str, supplier: str, expiration_date: datetime
+    ) -> str | None: ...
 
     @abstractmethod
     async def add_inventory_to(

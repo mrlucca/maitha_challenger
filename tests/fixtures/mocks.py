@@ -7,7 +7,10 @@ from src.domain.contracts.repositories.health_check_repository import (
 )
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
-from src.domain.use_cases.product_create import ProductCreateUseCase
+from src.domain.use_cases.product_create import (
+    ProductCreateUseCase,
+    InputProductCreateDTO,
+)
 from src.domain.use_cases.product_delete import (
     InputProductDeleteDTO,
     ProductDeleteUseCase,
@@ -52,6 +55,21 @@ def input_product_delete_dto_fixture():
         code="ABC123",
         supplier="Supplier",
         expiration_date=datetime.datetime.now(datetime.UTC),
+    )
+
+
+@pytest.fixture
+def input_product_create_dto_fixture():
+    return InputProductCreateDTO(
+        title="Produto Teste",
+        description="Descrição do Produto Teste",
+        code="ABC123",
+        supplier="Fornecedor XYZ",
+        inventory_quantity=50,
+        buy_price=10.99,
+        sell_price=19.99,
+        weight_in_kilograms=1.5,
+        expiration_date=datetime.datetime.now(datetime.timezone.utc),
     )
 
 

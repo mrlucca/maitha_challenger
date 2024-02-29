@@ -1,17 +1,17 @@
 from dataclasses import dataclass
 import pydantic
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 from src.domain.contracts.repositories.product_repository import IProductRepository
 from src.domain.entities.product import Product
 
 
 class UpdatableInformation(pydantic.BaseModel):
-    title: Union[str, None]
-    description: Union[str, None]
-    buy_price: Union[float, None]
-    sell_price: Union[float, None]
-    weight_in_kilograms: Union[float, None]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    buy_price: Optional[float] = None
+    sell_price: Optional[float] = None
+    weight_in_kilograms: Optional[float] = None
 
 
 class InputProductUpdateDTO(pydantic.BaseModel):

@@ -18,12 +18,12 @@ from src.domain.entities.purchase import CustomerType, PaymentMethod, Purchase
 Base = declarative_base()
 
 
-def make_product_id_from_base(code, supplier, date):
+def make_product_id_from_base(code: str, supplier: str, date: datetime) -> str:
     yyyymmdd = date.strftime("%Y%m%d")
     return f"{code}{supplier}{yyyymmdd}"
 
 
-def make_product_id_from(product):
+def make_product_id_from(product: Product) -> str:
     return make_product_id_from_base(
         product.code, product.supplier, product.expiration_date
     )
@@ -97,7 +97,7 @@ class PurchaseModel(Base):
     payment_method = Column(Enum(PaymentMethod), nullable=False)
     total_amount = Column(Numeric(10, 2))
 
-    product = relationship("ProductModel", back_populates="purchases")
+    product = relationship("ProductModel")
 
     def __repr__(self):
         return f"<Purchase(id={self.id}, product_id={self.product_id}, quantity={self.quantity}, purchase_date={self.purchase_date}, identification={self.identification}, identification_type={self.identification_type}, payment_method={self.payment_method})>"

@@ -39,6 +39,8 @@ services:
       - POSTGRES_USER=local_test
       - POSTGRES_PASSWORD=local_test
       - POSTGRES_DB=local_test
+    ports:
+      - "5432:5432"
 
   broker:
     image: rabbitmq:latest
